@@ -1,0 +1,48 @@
+{
+  "dataset_samples": 4000,
+  "train_samples": 3200,
+  "test_samples": 800,
+  "feature_count": 20,
+  "selected_model": "Random Forest",
+  "models": {
+    "Logistic Regression": {
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "roc_auc": 1.0,
+      "confusion_matrix": {
+        "TN": 400,
+        "FP": 0,
+        "FN": 0,
+        "TP": 400
+      }
+    },
+    "Decision Tree": {
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "roc_auc": 1.0,
+      "confusion_matrix": {
+        "TN": 400,
+        "FP": 0,
+        "FN": 0,
+        "TP": 400
+      }
+    },
+    "Random Forest": {
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "roc_auc": 1.0,
+      "confusion_matrix": {
+        "TN": 400,
+        "FP": 0,
+        "FN": 0,
+        "TP": 400
+      }
+    }
+  }
+}

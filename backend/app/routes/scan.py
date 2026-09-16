@@ -1,0 +1,65 @@
+"""
+PhishGuard AI - Scan Route Endpoints
+Handles URL risk scanning, validation, and individual report retrieval.
+"""
+
+from fastapi import APIRouter, HTTPException, status
+from app.models.scan import URLScanRequest, URLScanResponse, URLScanResponseData
+from app.services.predictor import predict_url_risk
+from app.services.db_service import save_scan_record, get_scan_by_id
+
+router = APIRouter(prefix="/scan", tags=["Scanning"])
+
+
+@router.post("", response_model=URLScanResponse, status_code=status.HTTP_200_OK)
+async def scan_url(payload: URLScanRequest):
+    """
+    Submits a URL for comprehensive phishing and threat analysis.
+    Extracts 20 features, runs the Random Forest model, computes risk score,
+    generates an explainable report, and persists the record to the database.
+    """
+    if not payload.url or not payload.url.strip():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="URL field cannot be empty."
+        )
+
+    try:
+        # Run prediction and explainability pipeline
+        result = predict_url_risk(payload.url)
+    except ValueError as val_err:
+        # User-friendly validation error
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid URL: {str(val_err)}"
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Analysis pipeline error: {str(exc)}"
+        )
+
+    # Persist to database
+    scan_id = await save_scan_record(result)
+    result["id"] = scan_id
+
+    return URLScanResponse(
+        status="success",
+        data=URLScanResponseData(**result)
+    )
+
+
+@router.get("/{scan_id}", response_model=URLScanResponse, status_code=status.HTTP_200_OK)
+async def get_scan_details(scan_id: str):
+    """Retrieves full analysis details for an existing scan by its ID."""
+    doc = await get_scan_by_id(scan_id)
+    if not doc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Scan with ID '{scan_id}' not found."
+        )
+
+    return URLScanResponse(
+        status="success",
+        data=URLScanResponseData(**doc)
+    )

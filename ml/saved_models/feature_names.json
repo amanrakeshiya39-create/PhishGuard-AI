@@ -1,0 +1,29 @@
+{
+  "feature_columns": [
+    "url_length",
+    "hostname_length",
+    "path_length",
+    "query_length",
+    "count_dots",
+    "count_hyphens",
+    "count_digits",
+    "count_special_chars",
+    "has_https",
+    "has_at_symbol",
+    "count_at",
+    "has_ip",
+    "subdomain_count",
+    "has_suspicious_keywords",
+    "suspicious_keyword_count",
+    "has_suspicious_tld",
+    "is_shortened",
+    "has_non_standard_port",
+    "has_double_slash_redirect",
+    "url_entropy"
+  ],
+  "feature_count": 20,
+  "target_mapping": {
+    "0": "Legitimate",
+    "1": "Phishing"
+  }
+}
