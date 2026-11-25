@@ -93,6 +93,11 @@ def test_url_existence_checker_handles_existing_and_missing(monkeypatch):
         return [(socket.AF_INET, socket.SOCK_STREAM, 6, "", ("93.184.216.34", 0))]
 
     async def fake_getaddrinfo_missing(self, host, port, **kwargs):
+        if host in ("example.com", "google.com"):
+            return [(socket.AF_INET, socket.SOCK_STREAM, 6, "", ("93.184.216.34", 0))]
+        raise socket.gaierror(8, "nodename nor servname provided, or not known")
+
+    async def fake_getaddrinfo_offline(self, host, port, **kwargs):
         raise socket.gaierror(8, "nodename nor servname provided, or not known")
 
     monkeypatch.setattr(
@@ -123,6 +128,11 @@ def test_url_existence_checker_handles_existing_and_missing(monkeypatch):
         assert res_missing["dns_resolved"] is False
         assert "Does Not Exist" in res_missing["status"]
 
+        monkeypatch.setattr(type(loop), "getaddrinfo", fake_getaddrinfo_offline)
+        res_offline = await url_checker.check_url_existence("https://wikipedia.org", "wikipedia.org")
+        assert res_offline["exists"] is None
+        assert "Unavailable" in res_offline["status"]
+
     asyncio.run(_run())
 
 
@@ -140,13 +150,27 @@ def test_authenticity_verdict_detects_typosquat_fake_and_official_real():
     assert fake_res["verdict"] == "Fake"
     assert fake_res["brand_impersonation"] == "paypal"
 
-    real_res = assess_url_authenticity(
-        domain="google.com",
-        normalized_url="https://google.com",
+    # Non-existent domain confirmed via DNS should be Fake
+    nxdomain_res = assess_url_authenticity(
+        domain="nonexistent-bank-9999.com",
+        normalized_url="https://nonexistent-bank-9999.com",
         features={"has_ip": 0, "is_punycode": 0, "has_at_symbol": 0, "has_suspicious_tld": 0, "has_https": 1},
         risk_score=5,
         classification="Low Risk",
         confidence=0.95,
+        url_existence={"exists": False, "dns_resolved": False, "http_status": None},
     )
-    assert real_res["verdict"] == "Real"
-    assert real_res["brand_impersonation"] is None
+    assert nxdomain_res["verdict"] == "Fake"
+
+    # Official multi-part TLD and ordinary words like 'purchase.com' must stay Real
+    for ok_domain in ("google.com", "www.amazon.co.uk", "purchase.com"):
+        real_res = assess_url_authenticity(
+            domain=ok_domain,
+            normalized_url=f"https://{ok_domain}",
+            features={"has_ip": 0, "is_punycode": 0, "has_at_symbol": 0, "has_suspicious_tld": 0, "has_https": 1},
+            risk_score=5,
+            classification="Low Risk",
+            confidence=0.95,
+        )
+        assert real_res["verdict"] == "Real", f"Expected Real for {ok_domain}, got {real_res}"
+        assert real_res["brand_impersonation"] is None

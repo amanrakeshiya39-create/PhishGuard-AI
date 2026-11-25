@@ -88,6 +88,24 @@ def _probe_http(url: str, timeout: float = 3.0) -> Dict[str, Any]:
         return {"error": str(exc)}
 
 
+async def _is_dns_online(loop: asyncio.AbstractEventLoop, timeout: float = 1.5) -> bool:
+    """
+    Verifies whether outbound DNS is functional in this runtime by resolving
+    a known public reference domain. Distinguishes sandbox/offline environments
+    from genuine NXDOMAIN responses.
+    """
+    for ref_domain in ("example.com", "google.com"):
+        try:
+            await asyncio.wait_for(
+                loop.getaddrinfo(ref_domain, None, type=socket.SOCK_STREAM),
+                timeout=timeout,
+            )
+            return True
+        except Exception:
+            continue
+    return False
+
+
 async def check_url_existence(
     normalized_url: str, domain: str, timeout: float = 2.5
 ) -> Dict[str, Any]:
@@ -120,12 +138,9 @@ async def check_url_existence(
                 "status": "Check Timed Out",
                 "detail": f"DNS lookup for '{domain}' timed out after {timeout:.1f}s.",
             }
-        except socket.gaierror as gai_err:
-            err_no = getattr(gai_err, "errno", None)
-            offline_errnos = {
-                getattr(socket, "EAI_AGAIN", -3),
-            }
-            if err_no in offline_errnos:
+        except socket.gaierror:
+            dns_online = await _is_dns_online(loop)
+            if not dns_online:
                 return {
                     "exists": None,
                     "dns_resolved": False,
@@ -133,8 +148,8 @@ async def check_url_existence(
                     "resolved_ip": None,
                     "final_url": None,
                     "response_time_ms": None,
-                    "status": "Check Unavailable (Offline / DNS Unreachable)",
-                    "detail": "Temporary DNS failure or offline environment; could not verify domain existence.",
+                    "status": "Check Unavailable (Offline / Network Restricted)",
+                    "detail": "Outbound DNS/network access is unavailable in the current runtime environment.",
                 }
             return {
                 "exists": False,
@@ -144,7 +159,7 @@ async def check_url_existence(
                 "final_url": None,
                 "response_time_ms": None,
                 "status": "Does Not Exist (Domain Not Found)",
-                "detail": f"DNS lookup failed for '{domain}'. The domain may be unregistered, expired, or unreachable.",
+                "detail": f"Live DNS lookup failed for '{domain}'. The domain appears unregistered or non-existent.",
             }
         except OSError as os_err:
             if os_err.errno in (errno.EPERM, errno.EACCES, errno.ENETUNREACH, errno.EHOSTUNREACH):
