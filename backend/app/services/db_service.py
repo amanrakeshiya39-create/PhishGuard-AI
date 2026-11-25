@@ -131,6 +131,17 @@ async def delete_scan_record(scan_id: str) -> bool:
     return deleted
 
 
+async def get_all_scans_raw() -> List[Dict[str, Any]]:
+    """Returns all stored scan records from MongoDB or the in-memory fallback."""
+    if db_manager.is_connected and db_manager.db is not None:
+        try:
+            cursor = db_manager.db.scans.find({})
+            return [doc async for doc in cursor]
+        except Exception:
+            return list(IN_MEMORY_SCANS)
+    return list(IN_MEMORY_SCANS)
+
+
 async def calculate_dashboard_stats() -> Dict[str, Any]:
     """Calculates overall metrics, risk distribution, and top flagged indicators."""
     total = 0
@@ -140,17 +151,7 @@ async def calculate_dashboard_stats() -> Dict[str, Any]:
     total_score = 0.0
     factor_counts: Dict[str, int] = {}
 
-    all_scans = []
-
-    if db_manager.is_connected and db_manager.db is not None:
-        try:
-            cursor = db_manager.db.scans.find({})
-            async for doc in cursor:
-                all_scans.append(doc)
-        except Exception:
-            all_scans = IN_MEMORY_SCANS
-    else:
-        all_scans = IN_MEMORY_SCANS
+    all_scans = await get_all_scans_raw()
 
     total = len(all_scans)
     for s in all_scans:

@@ -6,6 +6,8 @@ Handles URL risk scanning, validation, and individual report retrieval.
 from fastapi import APIRouter, HTTPException, status
 from app.models.scan import URLScanRequest, URLScanResponse, URLScanResponseData
 from app.services.predictor import predict_url_risk
+from app.services.explainer import generate_explanation
+from app.services.url_checker import check_url_existence
 from app.services.db_service import save_scan_record, get_scan_by_id
 
 router = APIRouter(prefix="/scan", tags=["Scanning"])
@@ -25,8 +27,16 @@ async def scan_url(payload: URLScanRequest):
         )
 
     try:
-        # Run prediction and explainability pipeline
+        # Run prediction, live existence check, and explainability pipeline
         result = predict_url_risk(payload.url)
+        existence = await check_url_existence(result["normalized_url"], result["domain"])
+        result["url_existence"] = existence
+        result["explanation"] = generate_explanation(
+            result["features"],
+            result["risk_score"],
+            result["domain"],
+            url_existence=existence,
+        )
     except ValueError as val_err:
         # User-friendly validation error
         raise HTTPException(

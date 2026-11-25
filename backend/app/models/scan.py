@@ -26,6 +26,20 @@ class ExplanationModel(BaseModel):
     risk_factors: List[RiskFactor] = Field(default_factory=list)
 
 
+class URLExistenceInfo(BaseModel):
+    exists: Optional[bool] = Field(
+        None,
+        description="True if reachable/active, False if domain/page does not exist, None if offline/inconclusive.",
+    )
+    dns_resolved: bool = Field(False, description="Whether the hostname resolved in DNS.")
+    http_status: Optional[int] = Field(None, description="HTTP status code returned by the server.")
+    resolved_ip: Optional[str] = Field(None, description="Resolved IPv4/IPv6 address.")
+    final_url: Optional[str] = Field(None, description="Final URL after redirects, if any.")
+    response_time_ms: Optional[int] = Field(None, description="Probe response latency in milliseconds.")
+    status: str = Field(..., description="Human-readable URL existence status.")
+    detail: str = Field(..., description="Detailed reachability/DNS diagnostic note.")
+
+
 class URLScanResponseData(BaseModel):
     id: str = Field(..., description="Unique database identifier for this scan.")
     url: str = Field(..., description="Original input URL.")
@@ -37,6 +51,10 @@ class URLScanResponseData(BaseModel):
     probability_phishing: float = Field(..., ge=0.0, le=1.0, description="Estimated probability of phishing.")
     features: Dict[str, Any] = Field(..., description="All 20 extracted features.")
     explanation: ExplanationModel = Field(..., description="Explainable diagnostic breakdown.")
+    url_existence: Optional[URLExistenceInfo] = Field(
+        None,
+        description="Live DNS and HTTP existence verification result.",
+    )
     disclaimer: str = Field(..., description="Mandatory safety advisory disclaimer.")
     scanned_at: str = Field(..., description="ISO 8601 UTC scan timestamp.")
 

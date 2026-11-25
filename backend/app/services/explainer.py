@@ -4,10 +4,15 @@ Translates mathematical feature vectors and model probabilities into
 human-interpretable cybersecurity explanations and diagnostic risk factors.
 """
 
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 
-def generate_explanation(features: Dict[str, Any], risk_score: int, domain: str) -> Dict[str, Any]:
+def generate_explanation(
+    features: Dict[str, Any],
+    risk_score: int,
+    domain: str,
+    url_existence: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
     """
     Evaluates individual feature anomalies and generates contextual risk factors
     with severity ratings and actionable explanations.
@@ -32,13 +37,25 @@ def generate_explanation(features: Dict[str, Any], risk_score: int, domain: str)
         })
 
     # 3. Suspicious Keywords
-    keyword_count = features.get("has_suspicious_keywords", 0)
+    keyword_count = features.get(
+        "suspicious_keyword_count", features.get("has_suspicious_keywords", 0)
+    )
     if keyword_count > 0:
         severity = "HIGH" if keyword_count >= 2 else "MEDIUM"
+        detected = features.get("detected_keywords") or []
+        kw_note = f" ({', '.join(detected[:5])})" if detected else ""
         risk_factors.append({
             "factor": "Security / Credential Keywords",
             "severity": severity,
-            "description": f"Contains {keyword_count} sensitive keyword(s) commonly used in credential harvesting lures (e.g. login, verify, secure, account)."
+            "description": f"Contains {keyword_count} sensitive keyword(s){kw_note} commonly used in credential harvesting lures."
+        })
+
+    # 3b. Basic Auth '@' Credential Spoofing
+    if features.get("has_at_symbol", 0) == 1:
+        risk_factors.append({
+            "factor": "Credential '@' Symbol Spoofing",
+            "severity": "HIGH",
+            "description": "Contains '@' in the URL authority section, which can disguise the real destination domain."
         })
 
     # 4. Punycode / Homograph Attack
@@ -112,6 +129,17 @@ def generate_explanation(features: Dict[str, Any], risk_score: int, domain: str)
             "factor": f"High Character Randomness / Entropy ({entropy:.2f})",
             "severity": "LOW",
             "description": "URL exhibits high character randomness, which may indicate domain generation algorithms (DGA) or randomized obfuscation."
+        })
+
+    # 12. Live URL Existence Check
+    if url_existence and url_existence.get("exists") is False:
+        risk_factors.append({
+            "factor": "Unregistered or Inactive Domain / URL",
+            "severity": "MEDIUM",
+            "description": url_existence.get(
+                "detail",
+                "Live verification indicates the domain or endpoint does not currently resolve or exist.",
+            ),
         })
 
     # Synthesize human-readable summary

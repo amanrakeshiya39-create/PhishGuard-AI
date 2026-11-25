@@ -135,8 +135,9 @@ export function initScanner() {
     const confElem = document.getElementById("confidenceText");
     confElem.textContent = `Model Confidence: ${(data.confidence * 100).toFixed(0)}%`;
 
-    // 5. Target Overview
+    // 5. Target Overview & URL Existence
     document.getElementById("targetUrlText").textContent = data.url;
+    renderUrlExistence(data.url_existence);
     document.getElementById("diagnosticSummaryText").textContent = data.explanation.summary;
 
     // 6. Risk Factors
@@ -174,24 +175,75 @@ export function initScanner() {
     document.getElementById("disclaimerText").textContent = data.disclaimer;
   }
 
+  function renderUrlExistence(existence) {
+    const badge = document.getElementById("urlExistenceBadge");
+    const detail = document.getElementById("urlExistenceDetail");
+    const meta = document.getElementById("urlExistenceMeta");
+    if (!badge || !detail || !meta) return;
+
+    if (!existence) {
+      badge.className = "existence-pill unknown";
+      badge.textContent = "Not Checked";
+      detail.textContent = "Live URL existence status was not included in this record.";
+      meta.innerHTML = "";
+      return;
+    }
+
+    let pillClass = "unknown";
+    if (existence.exists === true) {
+      pillClass = existence.http_status && existence.http_status >= 400 ? "restricted" : "exists";
+    } else if (existence.exists === false) {
+      pillClass = "missing";
+    }
+
+    badge.className = `existence-pill ${pillClass}`;
+    badge.textContent = existence.status || "Unknown";
+    detail.textContent = existence.detail || "";
+
+    const metaParts = [];
+    metaParts.push(`DNS: ${existence.dns_resolved ? "Resolved" : "Not Resolved"}`);
+    if (existence.resolved_ip) metaParts.push(`IP: ${existence.resolved_ip}`);
+    if (existence.http_status !== null && existence.http_status !== undefined) {
+      metaParts.push(`HTTP: ${existence.http_status}`);
+    }
+    if (existence.response_time_ms !== null && existence.response_time_ms !== undefined) {
+      metaParts.push(`Latency: ${existence.response_time_ms} ms`);
+    }
+
+    meta.innerHTML = metaParts
+      .map((item) => `<span class="existence-meta-chip">${escapeHtml(item)}</span>`)
+      .join("");
+  }
+
   function renderFeatureTable(features) {
     const tbody = document.getElementById("featuresTableBody");
     tbody.innerHTML = "";
 
     const friendlyNames = {
+      url: "Normalized URL String",
+      hostname: "Extracted Hostname",
       url_length: "Total URL Length",
+      hostname_length: "Hostname Character Length",
       domain_length: "Domain Character Length",
+      path_length: "URL Path Length",
+      query_length: "Query String Length",
       has_ip: "Raw IP Hostname",
       count_dots: "Total Dots (.)",
       count_hyphens: "Total Hyphens (-)",
-      count_at: "Credential '@' Symbol",
+      count_digits: "Total Numeric Digits",
+      count_special_chars: "Special Character Count",
+      has_at_symbol: "Credential '@' Symbol Present",
+      count_at: "Credential '@' Symbol Count",
       count_question: "Query Delimiters (?)",
       count_equal: "Parameter Operators (=)",
       count_slash: "Path Delimiters (/)",
+      subdomain_count: "Subdomain Nesting Level",
       count_subdomains: "Subdomain Nesting Level",
       has_https: "HTTPS Protocol Active",
       has_double_slash_redirect: "Double Slash (//) In Path",
-      has_suspicious_keywords: "Suspicious Keyword Hits",
+      has_suspicious_keywords: "Suspicious Keyword Flag",
+      suspicious_keyword_count: "Suspicious Keyword Count",
+      detected_keywords: "Matched Phishing Keywords",
       has_suspicious_tld: "Abuse-Prone TLD (.xyz, .top, etc.)",
       url_entropy: "Shannon Character Entropy",
       digits_ratio: "Numeric Digit Density",

@@ -7,12 +7,14 @@ import { API } from "./api.js";
 import { initScanner } from "./scanner.js";
 import { initHistory } from "./history.js";
 import { initDashboard } from "./dashboard.js";
+import { initThreats } from "./threats.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   // 1. Initialize Subsystems
   initScanner();
   initHistory();
   initDashboard();
+  initThreats();
 
   // 2. Tab Navigation
   const navTabs = document.querySelectorAll(".nav-tab");
@@ -34,6 +36,8 @@ document.addEventListener("DOMContentLoaded", () => {
       // Trigger targeted refresh on tab switch
       if (targetTabId === "dashboard" && window.refreshDashboard) {
         window.refreshDashboard();
+      } else if (targetTabId === "threats" && window.refreshThreats) {
+        window.refreshThreats();
       }
     });
   });

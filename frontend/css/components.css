@@ -558,3 +558,189 @@
   gap: 12px;
   font-size: 0.9rem;
 }
+
+/* Live URL Existence Check Card */
+.url-existence-box {
+  background: rgba(10, 15, 29, 0.55);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.url-existence-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.url-existence-label {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.existence-pill {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+}
+
+.existence-pill.exists {
+  background: var(--color-safe-bg);
+  color: var(--color-safe);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.existence-pill.missing {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+.existence-pill.restricted {
+  background: var(--color-suspicious-bg);
+  color: var(--color-suspicious);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.existence-pill.unknown {
+  background: rgba(79, 172, 254, 0.12);
+  color: var(--blue-accent);
+  border: 1px solid rgba(79, 172, 254, 0.35);
+}
+
+.url-existence-detail {
+  font-size: 0.86rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+.url-existence-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.existence-meta-chip {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-subtle);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+}
+
+/* All Risks & Threats Catalog Grid */
+.threats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 20px;
+}
+
+.threat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.threat-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.threat-category-pill {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--cyan-primary);
+  background: rgba(0, 242, 254, 0.08);
+  border: 1px solid rgba(0, 242, 254, 0.25);
+  padding: 2px 9px;
+  border-radius: var(--radius-full);
+}
+
+.threat-hit-badge {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-subtle);
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+}
+
+.threat-hit-badge.active {
+  color: var(--color-suspicious);
+  background: var(--color-suspicious-bg);
+  border-color: rgba(245, 158, 11, 0.35);
+}
+
+.threat-card-title {
+  font-family: var(--font-heading);
+  font-size: 1.08rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.threat-card-desc {
+  font-size: 0.87rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  margin: 0;
+}
+
+.threat-example-box,
+.threat-mitigation-box {
+  background: rgba(10, 15, 29, 0.55);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.threat-example-box code {
+  font-family: var(--font-mono);
+  color: #fca5a5;
+  word-break: break-all;
+}
+
+.threat-box-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.threat-card-footer {
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.threat-card-footer code {
+  font-family: var(--font-mono);
+  color: var(--cyan-primary);
+}

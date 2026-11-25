@@ -32,6 +32,10 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
           <span>Dashboard</span>
         </button>
+        <button class="nav-tab" data-tab="threats" id="navTabThreats">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span>All Risks & Threats</span>
+        </button>
         <button class="nav-tab" data-tab="about" id="navTabAbout">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
           <span>Architecture</span>
@@ -131,6 +135,17 @@
                 <span style="font-size: 0.78rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Evaluated Target</span>
                 <div class="target-url-text" id="targetUrlText">https://example.com</div>
               </div>
+            </div>
+
+            <div class="url-existence-box" id="urlExistenceBox">
+              <div class="url-existence-header">
+                <span class="url-existence-label">Live URL Existence Check</span>
+                <span class="existence-pill unknown" id="urlExistenceBadge">Checking...</span>
+              </div>
+              <div class="url-existence-detail" id="urlExistenceDetail">
+                Verifying DNS resolution and HTTP reachability...
+              </div>
+              <div class="url-existence-meta" id="urlExistenceMeta"></div>
             </div>
 
             <div>
@@ -325,7 +340,70 @@
       </div>
     </section>
 
-    <!-- 4. ABOUT & ARCHITECTURE TAB -->
+    <!-- 4. ALL RISKS & THREATS TAB -->
+    <section class="tab-view" id="threatsView">
+      <div style="margin-bottom: 24px;">
+        <h2 style="font-family: var(--font-heading); font-size: 2rem; font-weight: 700; margin-bottom: 8px;">
+          All Risks &amp; Threats Catalog
+        </h2>
+        <p style="color: var(--text-secondary); font-size: 0.95rem;">
+          Complete breakdown of every phishing, obfuscation, network, and domain-existence threat evaluated by PhishGuard AI.
+        </p>
+      </div>
+
+      <div class="metrics-grid" style="margin-bottom: 24px;">
+        <div class="metric-card">
+          <div class="metric-header">
+            <span>Total Monitored Threats</span>
+          </div>
+          <div class="metric-value" id="threatTotalCount">0</div>
+          <div class="metric-subtext">Active detection rules</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-header" style="color: var(--color-danger);">
+            <span>High Severity Threats</span>
+          </div>
+          <div class="metric-value" style="color: var(--color-danger);" id="threatHighCount">0</div>
+          <div class="metric-subtext">Critical phishing signals</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-header" style="color: var(--color-suspicious);">
+            <span>Medium Severity Threats</span>
+          </div>
+          <div class="metric-value" style="color: var(--color-suspicious);" id="threatMediumCount">0</div>
+          <div class="metric-subtext">Suspicious structural cues</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-header" style="color: var(--blue-accent);">
+            <span>Low Severity Threats</span>
+          </div>
+          <div class="metric-value" style="color: var(--blue-accent);" id="threatLowCount">0</div>
+          <div class="metric-subtext">Contextual &amp; entropy flags</div>
+        </div>
+      </div>
+
+      <div class="history-controls">
+        <div class="search-input-wrapper">
+          <svg class="input-icon" style="left: 12px; top: 12px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="threatSearchInput" class="history-search-input" placeholder="Search threats, categories, or feature keys...">
+        </div>
+
+        <div class="filter-group" id="threatSeverityFilters">
+          <button class="filter-btn threat-filter-btn active" data-severity="">All</button>
+          <button class="filter-btn threat-filter-btn" data-severity="HIGH">High</button>
+          <button class="filter-btn threat-filter-btn" data-severity="MEDIUM">Medium</button>
+          <button class="filter-btn threat-filter-btn" data-severity="LOW">Low</button>
+        </div>
+
+        <div style="font-size: 0.85rem; color: var(--text-muted);" id="threatsVisibleCount">0 threats</div>
+      </div>
+
+      <div class="threats-grid" id="threatsGrid">
+        <!-- Populated dynamically -->
+      </div>
+    </section>
+
+    <!-- 5. ABOUT & ARCHITECTURE TAB -->
     <section class="tab-view" id="aboutView">
       <div style="margin-bottom: 28px;">
         <h2 style="font-family: var(--font-heading); font-size: 2rem; font-weight: 700; margin-bottom: 8px;">

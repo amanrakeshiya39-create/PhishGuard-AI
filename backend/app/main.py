@@ -16,6 +16,7 @@ from app.routes.scan import router as scan_router
 from app.routes.history import router as history_router
 from app.routes.stats import router as stats_router
 from app.routes.health import router as health_router
+from app.routes.threats import router as threats_router
 
 
 @asynccontextmanager
@@ -51,12 +52,14 @@ app.include_router(scan_router, prefix="/api/v1")
 app.include_router(history_router, prefix="/api/v1")
 app.include_router(stats_router, prefix="/api/v1")
 app.include_router(health_router, prefix="/api/v1")
+app.include_router(threats_router, prefix="/api/v1")
 
 # Also alias at /api for convenience
 app.include_router(scan_router, prefix="/api")
 app.include_router(history_router, prefix="/api")
 app.include_router(stats_router, prefix="/api")
 app.include_router(health_router, prefix="/api")
+app.include_router(threats_router, prefix="/api")
 
 
 # Global Exception Handler for Unhandled Errors to prevent server crash

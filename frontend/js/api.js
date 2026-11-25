@@ -85,5 +85,15 @@ export const API = {
     if (!res.ok) throw new Error("Failed to load statistics.");
     const data = await res.json();
     return data.data;
+  },
+
+  /**
+   * Fetches full threat catalog and live detection counts
+   */
+  async getThreats() {
+    const res = await fetch(`${API_BASE_URL}/threats`);
+    if (!res.ok) throw new Error("Failed to load threats catalog.");
+    const data = await res.json();
+    return data.data;
   }
 };
