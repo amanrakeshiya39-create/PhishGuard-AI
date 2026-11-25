@@ -744,3 +744,54 @@
   font-family: var(--font-mono);
   color: var(--cyan-primary);
 }
+
+/* URL Authenticity (Real vs. Fake) Verdict Card */
+.authenticity-box {
+  background: rgba(10, 15, 29, 0.55);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.authenticity-pill {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  margin-top: 8px;
+  display: inline-block;
+}
+
+.url-existence-header .authenticity-pill {
+  margin-top: 0;
+}
+
+.authenticity-pill.real {
+  background: var(--color-safe-bg);
+  color: var(--color-safe);
+  border: 1px solid rgba(16, 185, 129, 0.45);
+}
+
+.authenticity-pill.suspicious {
+  background: var(--color-suspicious-bg);
+  color: var(--color-suspicious);
+  border: 1px solid rgba(245, 158, 11, 0.45);
+}
+
+.authenticity-pill.fake {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+  border: 1px solid rgba(239, 68, 68, 0.45);
+}
+
+.authenticity-reasons {
+  margin: 2px 0 0;
+  padding-left: 18px;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}

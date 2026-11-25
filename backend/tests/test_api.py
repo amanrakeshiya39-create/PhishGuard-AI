@@ -30,6 +30,10 @@ def test_scan_legitimate_url():
     assert "url_existence" in data
     assert "status" in data["url_existence"]
     assert "dns_resolved" in data["url_existence"]
+    assert "authenticity" in data
+    assert data["authenticity"]["verdict"] in ("Real", "Suspicious", "Fake")
+    assert data["authenticity"]["verdict"] == "Real"
+    assert data["authenticity"]["label"] == "Likely Real"
 
 
 def test_scan_phishing_url():
@@ -42,6 +46,8 @@ def test_scan_phishing_url():
     assert data["classification"] == "Phishing"
     assert data["risk_score"] >= 70
     assert len(data["explanation"]["risk_factors"]) > 0
+    assert data["authenticity"]["verdict"] == "Fake"
+    assert data["authenticity"]["brand_impersonation"] == "paypal"
 
 
 def test_scan_invalid_url_returns_400():
@@ -118,3 +124,29 @@ def test_url_existence_checker_handles_existing_and_missing(monkeypatch):
         assert "Does Not Exist" in res_missing["status"]
 
     asyncio.run(_run())
+
+
+def test_authenticity_verdict_detects_typosquat_fake_and_official_real():
+    from app.services.authenticity import assess_url_authenticity
+
+    fake_res = assess_url_authenticity(
+        domain="paypa1-secure.com",
+        normalized_url="http://paypa1-secure.com/login",
+        features={"has_ip": 0, "is_punycode": 0, "has_at_symbol": 0, "has_suspicious_tld": 0, "has_https": 0},
+        risk_score=25,
+        classification="Low Risk",
+        confidence=0.75,
+    )
+    assert fake_res["verdict"] == "Fake"
+    assert fake_res["brand_impersonation"] == "paypal"
+
+    real_res = assess_url_authenticity(
+        domain="google.com",
+        normalized_url="https://google.com",
+        features={"has_ip": 0, "is_punycode": 0, "has_at_symbol": 0, "has_suspicious_tld": 0, "has_https": 1},
+        risk_score=5,
+        classification="Low Risk",
+        confidence=0.95,
+    )
+    assert real_res["verdict"] == "Real"
+    assert real_res["brand_impersonation"] is None

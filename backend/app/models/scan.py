@@ -40,6 +40,16 @@ class URLExistenceInfo(BaseModel):
     detail: str = Field(..., description="Detailed reachability/DNS diagnostic note.")
 
 
+class AuthenticityVerdict(BaseModel):
+    verdict: str = Field(..., description="Short verdict: Real, Suspicious, or Fake.")
+    label: str = Field(..., description="Human-readable label: Likely Real, Suspicious (Could Be Fake), or Likely Fake (Phishing).")
+    tone: str = Field(..., description="UI tone key: real, suspicious, or fake.")
+    confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score for the assessment.")
+    brand_impersonation: Optional[str] = Field(None, description="Impersonated brand name if detected.")
+    summary: str = Field(..., description="Concise Real vs. Fake assessment summary.")
+    reasons: List[str] = Field(default_factory=list, description="Key supporting reasons for the verdict.")
+
+
 class URLScanResponseData(BaseModel):
     id: str = Field(..., description="Unique database identifier for this scan.")
     url: str = Field(..., description="Original input URL.")
@@ -54,6 +64,10 @@ class URLScanResponseData(BaseModel):
     url_existence: Optional[URLExistenceInfo] = Field(
         None,
         description="Live DNS and HTTP existence verification result.",
+    )
+    authenticity: Optional[AuthenticityVerdict] = Field(
+        None,
+        description="Real vs. Fake authenticity verdict.",
     )
     disclaimer: str = Field(..., description="Mandatory safety advisory disclaimer.")
     scanned_at: str = Field(..., description="ISO 8601 UTC scan timestamp.")
@@ -70,6 +84,7 @@ class ScanHistoryItem(BaseModel):
     domain: str
     risk_score: int
     classification: str
+    verdict: Optional[str] = None
     confidence: float
     scanned_at: str
 

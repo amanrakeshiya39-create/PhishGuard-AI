@@ -8,7 +8,7 @@ import { API } from "./api.js";
 export function initHistory() {
   const tbody = document.getElementById("historyTableBody");
   const searchInput = document.getElementById("historySearchInput");
-  const filterBtns = document.querySelectorAll(".filter-btn");
+  const filterBtns = document.querySelectorAll("#historyView .filter-btn");
   const totalElem = document.getElementById("historyTotalCount");
 
   let currentClassification = "";
@@ -63,8 +63,14 @@ export function initHistory() {
       const tr = document.createElement("tr");
 
       let badgeClass = "safe";
-      if (item.classification === "Phishing") badgeClass = "phishing";
-      else if (item.classification === "Suspicious") badgeClass = "suspicious";
+      let derivedVerdict = item.verdict || "Real";
+      if (item.classification === "Phishing") {
+        badgeClass = "phishing";
+        if (!item.verdict) derivedVerdict = "Fake";
+      } else if (item.classification === "Suspicious") {
+        badgeClass = "suspicious";
+        if (!item.verdict) derivedVerdict = "Suspicious";
+      }
 
       const dateStr = item.scanned_at
         ? new Date(item.scanned_at).toLocaleString(undefined, {
@@ -89,7 +95,7 @@ export function initHistory() {
         </td>
         <td>
           <span class="badge-classification ${badgeClass}" style="padding: 3px 10px; font-size: 0.75rem;">
-            ${escapeHtml(item.classification)}
+            ${escapeHtml(item.classification)} (${escapeHtml(derivedVerdict)})
           </span>
         </td>
         <td style="font-size: 0.85rem; color: var(--text-secondary);">

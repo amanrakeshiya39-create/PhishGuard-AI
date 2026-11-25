@@ -159,6 +159,7 @@
               <span>Low Risk</span>
             </div>
             <div class="confidence-pill" id="confidenceText">Model Confidence: 95%</div>
+            <div class="authenticity-pill real" id="authenticityPill">Verdict: Likely Real</div>
           </div>
 
           <!-- Right: Diagnostic Overview & Factors -->
@@ -170,6 +171,17 @@
                   Target</span>
                 <div class="target-url-text" id="targetUrlText">https://example.com</div>
               </div>
+            </div>
+
+            <div class="authenticity-box" id="authenticityBox">
+              <div class="url-existence-header">
+                <span class="url-existence-label">URL Authenticity (Real vs. Fake)</span>
+                <span class="authenticity-pill real" id="authenticityStatusBadge">Likely Real</span>
+              </div>
+              <div class="url-existence-detail" id="authenticitySummary">
+                Evaluating domain legitimacy and impersonation signals...
+              </div>
+              <ul class="authenticity-reasons" id="authenticityReasons"></ul>
             </div>
 
             <div class="url-existence-box" id="urlExistenceBox">

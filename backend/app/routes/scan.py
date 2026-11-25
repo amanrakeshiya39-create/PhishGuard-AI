@@ -8,6 +8,7 @@ from app.models.scan import URLScanRequest, URLScanResponse, URLScanResponseData
 from app.services.predictor import predict_url_risk
 from app.services.explainer import generate_explanation
 from app.services.url_checker import check_url_existence
+from app.services.authenticity import assess_url_authenticity
 from app.services.db_service import save_scan_record, get_scan_by_id
 
 router = APIRouter(prefix="/scan", tags=["Scanning"])
@@ -37,6 +38,17 @@ async def scan_url(payload: URLScanRequest):
             result["domain"],
             url_existence=existence,
         )
+        authenticity = assess_url_authenticity(
+            domain=result["domain"],
+            normalized_url=result["normalized_url"],
+            features=result["features"],
+            risk_score=result["risk_score"],
+            classification=result["classification"],
+            confidence=result["confidence"],
+            url_existence=existence,
+        )
+        result["authenticity"] = authenticity
+        result["verdict"] = authenticity["verdict"]
     except ValueError as val_err:
         # User-friendly validation error
         raise HTTPException(

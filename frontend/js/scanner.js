@@ -135,8 +135,9 @@ export function initScanner() {
     const confElem = document.getElementById("confidenceText");
     confElem.textContent = `Model Confidence: ${(data.confidence * 100).toFixed(0)}%`;
 
-    // 5. Target Overview & URL Existence
+    // 5. Target Overview, Authenticity & URL Existence
     document.getElementById("targetUrlText").textContent = data.url;
+    renderAuthenticity(data.authenticity);
     renderUrlExistence(data.url_existence);
     document.getElementById("diagnosticSummaryText").textContent = data.explanation.summary;
 
@@ -173,6 +174,38 @@ export function initScanner() {
 
     // 8. Disclaimer
     document.getElementById("disclaimerText").textContent = data.disclaimer;
+  }
+
+  function renderAuthenticity(authenticity) {
+    const gaugePill = document.getElementById("authenticityPill");
+    const statusBadge = document.getElementById("authenticityStatusBadge");
+    const summaryElem = document.getElementById("authenticitySummary");
+    const reasonsList = document.getElementById("authenticityReasons");
+    if (!gaugePill || !statusBadge || !summaryElem || !reasonsList) return;
+
+    if (!authenticity) {
+      gaugePill.className = "authenticity-pill suspicious";
+      gaugePill.textContent = "Verdict: Unverified";
+      statusBadge.className = "authenticity-pill suspicious";
+      statusBadge.textContent = "Unverified";
+      summaryElem.textContent = "Authenticity verdict was not included in this scan record.";
+      reasonsList.innerHTML = "";
+      return;
+    }
+
+    const tone = authenticity.tone || "suspicious";
+    const label = authenticity.label || authenticity.verdict || "Unverified";
+
+    gaugePill.className = `authenticity-pill ${tone}`;
+    gaugePill.textContent = `Verdict: ${label}`;
+
+    statusBadge.className = `authenticity-pill ${tone}`;
+    statusBadge.textContent = label;
+
+    summaryElem.textContent = authenticity.summary || "";
+    reasonsList.innerHTML = (authenticity.reasons || [])
+      .map((reason) => `<li>${escapeHtml(reason)}</li>`)
+      .join("");
   }
 
   function renderUrlExistence(existence) {
