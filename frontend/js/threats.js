@@ -4,7 +4,7 @@
  * with live detection counts, search, and severity filtering.
  */
 
-import { API } from "./api.js";
+import { API } from "./api.js?v=4";
 
 export function initThreats() {
   const grid = document.getElementById("threatsGrid");

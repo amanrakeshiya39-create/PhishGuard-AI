@@ -174,3 +174,27 @@ def test_authenticity_verdict_detects_typosquat_fake_and_official_real():
         )
         assert real_res["verdict"] == "Real", f"Expected Real for {ok_domain}, got {real_res}"
         assert real_res["brand_impersonation"] is None
+
+
+def test_scan_endpoint_aligns_score_for_spoofing_shortener_and_deceptive_urls():
+    # '@' credential spoofing must score high and return Fake
+    resp_at = client.post("/api/v1/scan", json={"url": "http://paypal.com@evil.com/login"})
+    assert resp_at.status_code == 200
+    d_at = resp_at.json()["data"]
+    assert d_at["risk_score"] >= 70
+    assert d_at["classification"] == "Phishing"
+    assert d_at["authenticity"]["verdict"] == "Fake"
+
+    # Deceptive domain over HTTP must not say Real / 0
+    resp_fake = client.post("/api/v1/scan", json={"url": "http://fakeurl.com"})
+    assert resp_fake.status_code == 200
+    d_fake = resp_fake.json()["data"]
+    assert d_fake["risk_score"] >= 35
+    assert d_fake["authenticity"]["verdict"] == "Suspicious"
+
+    # URL shortener must be Suspicious rather than Real
+    resp_short = client.post("/api/v1/scan", json={"url": "https://bit.ly/3xY9zqA"})
+    assert resp_short.status_code == 200
+    d_short = resp_short.json()["data"]
+    assert d_short["risk_score"] >= 35
+    assert d_short["authenticity"]["verdict"] == "Suspicious"

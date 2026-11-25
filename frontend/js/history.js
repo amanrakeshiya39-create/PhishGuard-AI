@@ -3,7 +3,7 @@
  * Fetches, filters, searches, and displays past scan audit trails.
  */
 
-import { API } from "./api.js";
+import { API } from "./api.js?v=4";
 
 export function initHistory() {
   const tbody = document.getElementById("historyTableBody");

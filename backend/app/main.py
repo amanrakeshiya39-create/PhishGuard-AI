@@ -62,6 +62,17 @@ app.include_router(health_router, prefix="/api")
 app.include_router(threats_router, prefix="/api")
 
 
+# Disable aggressive browser caching on static HTML/JS/CSS so UI updates apply immediately
+@app.middleware("http")
+async def disable_static_cache(request: Request, call_next):
+    response = await call_next(request)
+    path = request.url.path
+    if path == "/" or path.endswith((".html", ".js", ".css")):
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+        response.headers["Pragma"] = "no-cache"
+    return response
+
+
 # Global Exception Handler for Unhandled Errors to prevent server crash
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):

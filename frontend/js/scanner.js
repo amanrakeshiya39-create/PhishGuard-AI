@@ -3,7 +3,7 @@
  * Manages URL submission, animated risk gauge, diagnostics, and feature inspection.
  */
 
-import { API } from "./api.js";
+import { API } from "./api.js?v=4";
 
 const CIRCUMFERENCE = 565.48; // 2 * PI * 90
 

@@ -79,6 +79,7 @@ ACTION_LURE_KEYWORDS: Set[str] = {
     "suspended",
     "validate",
     "unlock",
+    "kyc",
 }
 
 
@@ -102,7 +103,13 @@ def _is_official_brand_host(host: str, official_roots: Set[str]) -> bool:
     return any(host == root or host.endswith("." + root) for root in official_roots)
 
 
-def _detect_brand_impersonation(domain: str) -> Optional[Tuple[str, str]]:
+def has_deceptive_host_words(domain: str) -> bool:
+    """Checks whether the hostname contains explicit deceptive/mock threat words."""
+    host = (domain or "").lower()
+    return any(word in host for word in DECEPTIVE_DOMAIN_WORDS)
+
+
+def detect_brand_impersonation(domain: str) -> Optional[Tuple[str, str]]:
     """
     Returns (brand_name, reason) if hostname tokens contain or typosquat a known
     brand while not belonging to that brand's official root domain.
@@ -131,6 +138,51 @@ def _detect_brand_impersonation(domain: str) -> Optional[Tuple[str, str]]:
     return None
 
 
+def apply_authenticity_risk_guardrails(
+    domain: str,
+    normalized_url: str,
+    features: Dict[str, Any],
+    risk_score: int,
+    url_existence: Optional[Dict[str, Any]] = None,
+) -> int:
+    """
+    Aligns the numeric 0-100 risk score with strong authenticity and existence
+    signals so the Risk Gauge and Real/Fake Verdict never contradict each other.
+    """
+    score = int(risk_score)
+    all_tokens = {t for t in re.split(r"[^a-z0-9-]+", (normalized_url or "").lower()) if t}
+    has_lure = bool(all_tokens & ACTION_LURE_KEYWORDS)
+    deceptive = has_deceptive_host_words(domain)
+    brand_hit = detect_brand_impersonation(domain)
+
+    if brand_hit is not None or features.get("has_at_symbol") == 1:
+        score = max(score, 85)
+
+    if features.get("has_suspicious_tld") == 1 and features.get("has_https") == 0:
+        score = max(score, 72 if (has_lure or deceptive or features.get("count_hyphens", 0) >= 2) else 55)
+
+    if features.get("is_shortened") == 1:
+        score = max(score, 40)
+
+    if features.get("has_https") == 0 and (has_lure or deceptive or features.get("count_hyphens", 0) >= 2):
+        score = max(score, 45)
+    elif deceptive:
+        score = max(score, 50)
+
+    if url_existence:
+        exists = url_existence.get("exists")
+        dns_resolved = url_existence.get("dns_resolved", False)
+        http_status = url_existence.get("http_status")
+        if exists is False and not dns_resolved:
+            score = max(score, 75)
+        elif dns_resolved and exists is False and http_status in (404, 410):
+            score = max(score, 45)
+        elif url_existence.get("ssl_error"):
+            score = max(score, 60)
+
+    return min(100, score)
+
+
 def assess_url_authenticity(
     domain: str,
     normalized_url: str,
@@ -147,13 +199,12 @@ def assess_url_authenticity(
     reasons: List[str] = []
     impersonated_brand: Optional[str] = None
 
-    brand_hit = _detect_brand_impersonation(domain)
+    brand_hit = detect_brand_impersonation(domain)
     if brand_hit:
         impersonated_brand, brand_reason = brand_hit
         reasons.append(brand_reason)
 
-    host_tokens = {t for t in re.split(r"[.-]+", (domain or "").lower()) if t}
-    has_deceptive_word = bool(host_tokens & DECEPTIVE_DOMAIN_WORDS)
+    has_deceptive_word = has_deceptive_host_words(domain)
     if has_deceptive_word:
         reasons.append("Hostname contains deceptive/mock threat terminology.")
 
@@ -185,7 +236,10 @@ def assess_url_authenticity(
         dns_resolved = url_existence.get("dns_resolved", False)
         exists = url_existence.get("exists")
         if exists is True and http_status is not None:
-            existence_note = f"Live server responded (HTTP {http_status})."
+            if url_existence.get("ssl_error"):
+                reasons.append(f"Live HTTPS responded (HTTP {http_status}), but the SSL/TLS certificate failed validation.")
+            else:
+                existence_note = f"Live server responded (HTTP {http_status})."
         elif dns_resolved and exists is False and http_status in (404, 410):
             page_not_found = True
             reasons.append(
@@ -199,9 +253,11 @@ def assess_url_authenticity(
         features.get("has_https") == 0
         and (bool(matched_action_keywords) or has_deceptive_word or features.get("count_hyphens", 0) >= 2)
     )
+    has_ssl_error = bool(url_existence and url_existence.get("ssl_error"))
+    is_shortened = features.get("is_shortened") == 1
 
     # Decision synthesis
-    if risk_score >= 70 or classification == "Phishing" or impersonated_brand is not None:
+    if risk_score >= 70 or classification == "Phishing" or impersonated_brand is not None or features.get("has_at_symbol") == 1:
         verdict = "Fake"
         label = "Likely Fake (Phishing)"
         tone = "fake"
@@ -219,10 +275,12 @@ def assess_url_authenticity(
             "Live DNS verification confirmed this domain does not exist. "
             "Treat this URL as invalid or fake."
         )
-    elif risk_score >= 35 or classification == "Suspicious" or page_not_found or has_lure_with_http or has_deceptive_word:
+    elif risk_score >= 35 or classification == "Suspicious" or page_not_found or has_lure_with_http or has_deceptive_word or has_ssl_error or is_shortened:
         verdict = "Suspicious"
         label = "Suspicious (Could Be Fake)"
         tone = "suspicious"
+        if is_shortened and not reasons:
+            reasons.append("Uses a URL shortening service that hides the true destination domain.")
         summary = (
             f"This URL shows suspicious traits or incomplete verification (Risk Score: {risk_score}/100). "
             "Verify the source independently before trusting it."

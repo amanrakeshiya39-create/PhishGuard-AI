@@ -3,11 +3,11 @@
  * Coordinates tabs, system health telemetry, and module initialization.
  */
 
-import { API } from "./api.js";
-import { initScanner } from "./scanner.js";
-import { initHistory } from "./history.js";
-import { initDashboard } from "./dashboard.js";
-import { initThreats } from "./threats.js";
+import { API } from "./api.js?v=4";
+import { initScanner } from "./scanner.js?v=4";
+import { initHistory } from "./history.js?v=4";
+import { initDashboard } from "./dashboard.js?v=4";
+import { initThreats } from "./threats.js?v=4";
 
 document.addEventListener("DOMContentLoaded", () => {
   // 1. Initialize Subsystems

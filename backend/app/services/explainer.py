@@ -5,6 +5,7 @@ human-interpretable cybersecurity explanations and diagnostic risk factors.
 """
 
 from typing import Dict, Any, List, Optional
+from app.services.authenticity import detect_brand_impersonation, has_deceptive_host_words
 
 
 def generate_explanation(
@@ -140,6 +141,22 @@ def generate_explanation(
                 "detail",
                 "Live verification indicates the domain or endpoint does not currently resolve or exist.",
             ),
+        })
+
+    # 13. Brand Impersonation / Typosquatting & Deceptive Host Terms
+    brand_hit = detect_brand_impersonation(domain)
+    if brand_hit:
+        _, brand_reason = brand_hit
+        risk_factors.append({
+            "factor": "Brand Impersonation / Lookalike Domain",
+            "severity": "HIGH",
+            "description": brand_reason,
+        })
+    elif has_deceptive_host_words(domain):
+        risk_factors.append({
+            "factor": "Deceptive Hostname Keywords",
+            "severity": "MEDIUM",
+            "description": f"Hostname '{domain}' contains explicit deceptive or mock threat terms.",
         })
 
     # Synthesize human-readable summary

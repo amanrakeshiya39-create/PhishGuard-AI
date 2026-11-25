@@ -8,8 +8,18 @@ from app.models.scan import URLScanRequest, URLScanResponse, URLScanResponseData
 from app.services.predictor import predict_url_risk
 from app.services.explainer import generate_explanation
 from app.services.url_checker import check_url_existence
-from app.services.authenticity import assess_url_authenticity
+from app.services.authenticity import (
+    apply_authenticity_risk_guardrails,
+    assess_url_authenticity,
+)
 from app.services.db_service import save_scan_record, get_scan_by_id
+from app.utils.constants import (
+    LABEL_LOW_RISK,
+    LABEL_PHISHING,
+    LABEL_SUSPICIOUS,
+    RISK_THRESHOLD_LOW,
+    RISK_THRESHOLD_SUSPICIOUS,
+)
 
 router = APIRouter(prefix="/scan", tags=["Scanning"])
 
@@ -32,6 +42,22 @@ async def scan_url(payload: URLScanRequest):
         result = predict_url_risk(payload.url)
         existence = await check_url_existence(result["normalized_url"], result["domain"])
         result["url_existence"] = existence
+
+        aligned_score = apply_authenticity_risk_guardrails(
+            domain=result["domain"],
+            normalized_url=result["normalized_url"],
+            features=result["features"],
+            risk_score=result["risk_score"],
+            url_existence=existence,
+        )
+        result["risk_score"] = aligned_score
+        if aligned_score <= RISK_THRESHOLD_LOW:
+            result["classification"] = LABEL_LOW_RISK
+        elif aligned_score <= RISK_THRESHOLD_SUSPICIOUS:
+            result["classification"] = LABEL_SUSPICIOUS
+        else:
+            result["classification"] = LABEL_PHISHING
+
         result["explanation"] = generate_explanation(
             result["features"],
             result["risk_score"],

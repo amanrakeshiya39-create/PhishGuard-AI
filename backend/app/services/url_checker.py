@@ -200,7 +200,8 @@ async def check_url_existence(
                 "resolved_ip": resolved_ip,
                 "final_url": final_url,
                 "response_time_ms": response_time_ms,
-                "status": "Exists (Reachable)",
+                "ssl_error": ssl_error,
+                "status": "Exists (Reachable)" if not ssl_error else "Exists (Invalid SSL Certificate)",
                 "detail": f"URL is live and responded with HTTP {http_status}{ssl_note}.",
             }
         if http_status in (401, 403, 429):

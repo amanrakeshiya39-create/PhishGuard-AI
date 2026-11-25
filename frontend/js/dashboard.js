@@ -3,7 +3,7 @@
  * Visualizes overall threat detection metrics and risk distribution.
  */
 
-import { API } from "./api.js";
+import { API } from "./api.js?v=4";
 
 export function initDashboard() {
   async function loadDashboardStats() {
